@@ -22,6 +22,7 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        parent::boot();
         // Global rate limit
         RateLimiter::for('global', fn ($request) =>
             Limit::perMinute(60)->by($request->ip())
@@ -36,5 +37,9 @@ class RouteServiceProvider extends ServiceProvider
 
         Route::middleware('web', 'throttle:global')
             ->group(base_path('routes/auth.php'));
+
+        Route::middleware('api')
+        ->prefix('api')
+        ->group(base_path('routes/api.php'));
     }
 }
