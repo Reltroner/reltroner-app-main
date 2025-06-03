@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 // Redirect root ke dashboard
 Route::get('/', fn () => redirect('/dashboard'));
@@ -24,17 +26,33 @@ Route::middleware('auth')->group(function () {
 Route::get('/login/keycloak', fn () => Socialite::driver('keycloak')->redirect())->name('login.keycloak');
 
 Route::get('/login/keycloak/callback', function () {
-    $keycloakUser = Socialite::driver('keycloak')->stateless()->user();
+    try {
+        $keycloakUser = Socialite::driver('keycloak')->stateless()->user();
 
-    $user = \App\Models\User::firstOrCreate([
-        'email' => $keycloakUser->email,
-    ], [
-        'name' => $keycloakUser->name ?? $keycloakUser->nickname,
-    ]);
+        Log::info('Keycloak user data', [
+            'id' => $keycloakUser->getId(),
+            'email' => $keycloakUser->getEmail(),
+            'name' => $keycloakUser->getName(),
+        ]);
 
-    auth()->login($user);
+        if (!$keycloakUser->getEmail()) {
+            abort(500, 'Email not found from Keycloak response.');
+        }
 
-    return redirect('/dashboard');
+        $user = User::firstOrCreate(
+            ['email' => $keycloakUser->getEmail()],
+            ['name' => $keycloakUser->getName() ?? 'Unknown']
+        );
+
+        auth()->login($user);
+
+        return redirect('/dashboard');
+    } catch (\Exception $e) {
+        Log::error('Keycloak login failed: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+        ]);
+        abort(500, 'SSO login failed. Check logs.');
+    }
 });
 
 require __DIR__.'/auth.php';
