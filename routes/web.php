@@ -27,12 +27,27 @@ Route::get('/login/keycloak', fn () => Socialite::driver('keycloak')->redirect()
 
 Route::get('/login/keycloak/callback', function () {
     try {
-        $user = Socialite::driver('keycloak')->stateless()->user();
-        dd($user); // <--- tambahkan sementara
-    } catch (\Exception $e) {
-        dd('Socialite Error', $e->getMessage(), $e->getTraceAsString());
+        $keycloakUser = Socialite::driver('keycloak')->stateless()->user();
+
+        if (!$keycloakUser->getEmail()) {
+            abort(500, 'Missing email from Keycloak response.');
+        }
+
+        $user = User::firstOrCreate(
+            ['email' => $keycloakUser->getEmail()],
+            ['name' => $keycloakUser->getName() ?? $keycloakUser->getNickname() ?? 'SSO User']
+        );
+
+        auth()->login($user);
+
+        return redirect('/dashboard');
+    } catch (\Throwable $e) {
+        Log::error('Keycloak SSO failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        abort(500, 'SSO login failed. Check server logs.');
     }
 });
-
 
 require __DIR__.'/auth.php';
