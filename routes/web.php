@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 // Redirect root ke dashboard
 Route::get('/', fn () => redirect('/dashboard'));
@@ -35,9 +36,13 @@ Route::get('/login/keycloak/callback', function () {
             throw new \Exception('Email not returned from Keycloak.');
         }
 
-        $user = \App\Models\User::firstOrCreate(
+        // ⬇⬇⬇ SISIPKAN DI SINI
+        $user = User::firstOrCreate(
             ['email' => $keycloakUser->getEmail()],
-            ['name' => $keycloakUser->getName() ?? 'Unknown']
+            [
+                'name' => $keycloakUser->getName() ?? 'Unknown',
+                'password' => bcrypt(Str::random(16)), // fallback password
+            ]
         );
 
         auth()->login($user);
@@ -49,5 +54,6 @@ Route::get('/login/keycloak/callback', function () {
         abort(500, 'SSO login failed. Check application logs.');
     }
 });
+
 
 require __DIR__.'/auth.php';
