@@ -1,3 +1,5 @@
+
+
 <?php
 // routes/web.php
 use Illuminate\Support\Facades\Route;
@@ -30,23 +32,21 @@ Route::get('/login/keycloak/callback', function () {
         $keycloakUser = Socialite::driver('keycloak')->stateless()->user();
 
         if (!$keycloakUser->getEmail()) {
-            abort(500, 'Missing email from Keycloak response.');
+            throw new \Exception('Email not returned from Keycloak.');
         }
 
-        $user = User::firstOrCreate(
+        $user = \App\Models\User::firstOrCreate(
             ['email' => $keycloakUser->getEmail()],
-            ['name' => $keycloakUser->getName() ?? $keycloakUser->getNickname() ?? 'SSO User']
+            ['name' => $keycloakUser->getName() ?? 'Unknown']
         );
 
         auth()->login($user);
-
         return redirect('/dashboard');
-    } catch (\Throwable $e) {
-        Log::error('Keycloak SSO failed', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
+    } catch (\Exception $e) {
+        \Log::error('SSO Callback Error: ' . $e->getMessage(), [
+            'trace' => $e->getTrace(),
         ]);
-        abort(500, 'SSO login failed. Check server logs.');
+        abort(500, 'SSO login failed. Check application logs.');
     }
 });
 
