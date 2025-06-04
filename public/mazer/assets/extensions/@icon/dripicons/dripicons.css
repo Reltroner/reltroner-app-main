@@ -10,7 +10,7 @@
 @font-face {
   font-family: "dripicons";
   src: url('dripicons.eot');
-  src: url('dripicons.eot?#iefix') format('eot'),
+  src: url('dripicons.eot?#iefix') format('embedded-opentype'),
 
     url('dripicons.woff') format('woff'),
     url('dripicons.ttf') format('truetype'),

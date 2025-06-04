@@ -77,10 +77,10 @@
 
         @php
             $modules = [
-                ['name' => 'HRM', 'url' => 'https://hrm.reltroner.com', 'icon' => 'user-group', 'color' => 'purple'],
+                ['name' => 'HRM', 'url' => 'https://hrm.reltroner.com', 'icon' => 'user', 'color' => 'purple'],
                 ['name' => 'Finance', 'url' => 'https://finance.reltroner.com', 'icon' => 'wallet', 'color' => 'green'],
                 ['name' => 'Inventory', 'url' => 'https://inventory.reltroner.com', 'icon' => 'box', 'color' => 'blue'],
-                ['name' => 'CRM', 'url' => 'https://crm.reltroner.com', 'icon' => 'contacts', 'color' => 'red'],
+                ['name' => 'CRM', 'url' => 'https://crm.reltroner.com', 'icon' => 'mail', 'color' => 'red'],
             ];
         @endphp
 
