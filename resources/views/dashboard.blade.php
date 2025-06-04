@@ -1,11 +1,10 @@
 @extends('layouts.dashboard')
-
+{{-- resource/views/dashboard.blade.php --}}
 @section('content')
 <style>
 .card-hover-zoom {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .card-hover-zoom:hover {
     transform: scale(1.05);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
@@ -18,43 +17,42 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 20px;
+    background-color: white;
+}
+
+.stats-icon img {
+    width: 28px;
+    height: 28px;
 }
 
 .stats-icon.purple { background-color: #9b87fd; }
-.stats-icon.green { background-color: #5ddab4; }
-.stats-icon.blue { background-color: #4dc4ff; }
-.stats-icon.red { background-color: #ff6b6b; }
+.stats-icon.green  { background-color: #5ddab4; }
+.stats-icon.blue   { background-color: #4dc4ff; }
+.stats-icon.red    { background-color: #ff6b6b; }
 
 @media print {
     header, nav, .breadcrumb-header, .btn, .alert, .sidebar, footer {
         display: none !important;
     }
-
     .card {
         box-shadow: none !important;
         border: none !important;
     }
-
     body {
         background: white !important;
         color: black;
     }
-
     .table th, .table td {
         color: black !important;
         background-color: white !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }
-
     .container, .card-body {
         width: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
     }
-
     .btn {
         display: none !important;
     }
@@ -77,10 +75,10 @@
 
         @php
             $modules = [
-                ['name' => 'HRM', 'url' => 'https://hrm.reltroner.com', 'icon' => 'user', 'color' => 'purple'],
-                ['name' => 'Finance', 'url' => 'https://finance.reltroner.com', 'icon' => 'card', 'color' => 'green'],
-                ['name' => 'Inventory', 'url' => 'https://inventory.reltroner.com', 'icon' => 'archive', 'color' => 'blue'],
-                ['name' => 'CRM', 'url' => 'https://crm.reltroner.com', 'icon' => 'mail', 'color' => 'red'],
+                ['name' => 'HRM', 'url' => 'https://hrm.reltroner.com', 'icon' => 'user.svg', 'color' => 'purple'],
+                ['name' => 'Finance', 'url' => 'https://finance.reltroner.com', 'icon' => 'card.svg', 'color' => 'green'],
+                ['name' => 'Inventory', 'url' => 'https://inventory.reltroner.com', 'icon' => 'box.svg', 'color' => 'blue'],
+                ['name' => 'CRM', 'url' => 'https://crm.reltroner.com', 'icon' => 'mail.svg', 'color' => 'red'],
             ];
         @endphp
 
@@ -91,7 +89,7 @@
                     <div class="row">
                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
                             <div class="stats-icon {{ $module['color'] }} mb-2">
-                                <i class="dripicons dripicons-{{ $module['icon'] }}"></i>
+                                <img src="{{ asset('images/' . $module['icon']) }}" alt="{{ $module['name'] }} Icon">
                             </div>
                         </div>
                         <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
