@@ -11,6 +11,22 @@
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
+.stats-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.stats-icon.purple { background-color: #9b87fd; }
+.stats-icon.green { background-color: #5ddab4; }
+.stats-icon.blue { background-color: #4dc4ff; }
+.stats-icon.red { background-color: #ff6b6b; }
+
 @media print {
     header, nav, .breadcrumb-header, .btn, .alert, .sidebar, footer {
         display: none !important;
@@ -46,7 +62,6 @@
 </style>
 
 <header class="mb-3">
-    <!-- // resources/views/dashboard.blade.php -->
     <a href="#" class="burger-btn d-block d-xl-none">
         <i class="bi bi-justify fs-3"></i>
     </a>
@@ -55,9 +70,9 @@
 <div class="page-heading">
     <h3>ERP Control Center</h3>
     <p class="text-subtitle text-muted">Choose a module to access</p>
-</div> 
+</div>
 
-<div class="page-content"> 
+<div class="page-content">
     <div class="row">
 
         @php
@@ -76,7 +91,7 @@
                     <div class="row">
                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
                             <div class="stats-icon {{ $module['color'] }} mb-2">
-                                <i class="icon dripicons dripicons-{{ $module['icon'] }}"></i>
+                                <i class="dripicons dripicons-{{ $module['icon'] }}"></i>
                             </div>
                         </div>
                         <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
@@ -89,6 +104,6 @@
         </div>
         @endforeach
 
-    </div> 
+    </div>
 </div>
 @endsection
