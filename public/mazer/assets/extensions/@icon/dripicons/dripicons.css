@@ -9,12 +9,11 @@
 
 @font-face {
   font-family: "dripicons";
-  src: url('dripicons.eot');
-  src: url('dripicons.eot?#iefix') format('embedded-opentype'),
-
-    url('dripicons.woff') format('woff'),
-    url('dripicons.ttf') format('truetype'),
-    url('dripicons.svg#dripicons') format('svg');
+  src: url('./icons/dripicons.eot');
+  src: url('./icons/dripicons.eot?#iefix') format('embedded-opentype'),
+       url('./icons/dripicons.woff') format('woff'),
+       url('./icons/dripicons.ttf') format('truetype'),
+       url('./icons/dripicons.svg#dripicons') format('svg');
 }
 
 .dripicons {
