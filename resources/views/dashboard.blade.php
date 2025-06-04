@@ -78,8 +78,8 @@
         @php
             $modules = [
                 ['name' => 'HRM', 'url' => 'https://hrm.reltroner.com', 'icon' => 'user', 'color' => 'purple'],
-                ['name' => 'Finance', 'url' => 'https://finance.reltroner.com', 'icon' => 'wallet', 'color' => 'green'],
-                ['name' => 'Inventory', 'url' => 'https://inventory.reltroner.com', 'icon' => 'box', 'color' => 'blue'],
+                ['name' => 'Finance', 'url' => 'https://finance.reltroner.com', 'icon' => 'card', 'color' => 'green'],
+                ['name' => 'Inventory', 'url' => 'https://inventory.reltroner.com', 'icon' => 'archive', 'color' => 'blue'],
                 ['name' => 'CRM', 'url' => 'https://crm.reltroner.com', 'icon' => 'mail', 'color' => 'red'],
             ];
         @endphp
