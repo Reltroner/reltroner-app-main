@@ -9,11 +9,11 @@
 
 @font-face {
   font-family: "dripicons";
-  src: url('./icons/dripicons.eot');
-  src: url('./icons/dripicons.eot?#iefix') format('embedded-opentype'),
-       url('./icons/dripicons.woff') format('woff'),
-       url('./icons/dripicons.ttf') format('truetype'),
-       url('./icons/dripicons.svg#dripicons') format('svg');
+  src: url('/mazer/assets/extensions/@icon/dripicons/icons/dripicons.eot');
+  src: url('/mazer/assets/extensions/@icon/dripicons/icons/dripicons.eot?#iefix') format('embedded-opentype'),
+       url('/mazer/assets/extensions/@icon/dripicons/icons/dripicons.woff') format('woff'),
+       url('/mazer/assets/extensions/@icon/dripicons/icons/dripicons.ttf') format('truetype'),
+       url('/mazer/assets/extensions/@icon/dripicons/icons/dripicons.svg#dripicons') format('svg');
 }
 
 .dripicons {
