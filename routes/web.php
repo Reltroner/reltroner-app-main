@@ -59,10 +59,10 @@ Route::get('/login/keycloak/callback', function () {
 Route::get('/logout', function () {
     Auth::logout();
 
-    $keycloakLogoutUrl = env('KEYCLOAK_LOGOUT_URL'); // Sudah betul
-    $redirectUri = 'https://app.reltroner.com';      // ← tanpa trailing slash, tanpa path
+    $keycloakLogoutUrl = env('KEYCLOAK_LOGOUT_URL');
+    $redirectUri = 'https://app.reltroner.com';
 
     return redirect()->away("$keycloakLogoutUrl?redirect_uri=$redirectUri");
-});
+})->name('keycloak.logout'); // ⬅ INI YANG WAJIB ADA
 
 require __DIR__.'/auth.php';
