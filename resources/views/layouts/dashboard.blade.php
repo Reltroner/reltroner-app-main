@@ -129,16 +129,14 @@
 
             @endif
 
-            <li class="sidebar-item">
-                <form method="POST" class='sidebar-link' action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="sidebar-link btn btn-link text-start w-100 p-0 m-0">
-                        <i class="bi bi-box-arrow-right"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </li>
-            
+            <form method="POST" action="{{ route('keycloak.logout') }}">
+                @csrf
+                <button type="submit" class="sidebar-link btn btn-link text-start w-100 p-0 m-0">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+
         </ul>
     </div>
 </div>

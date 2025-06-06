@@ -8,6 +8,7 @@ class Kernel extends HttpKernel
 {
     protected $middleware = [
         // Tambahkan global middleware di sini
+        \App\Http\Middleware\ForceHttps::class,
         \App\Http\Middleware\BlockBotUserAgent::class,
     ];
 
