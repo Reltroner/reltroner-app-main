@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 // Redirect root ke dashboard
 Route::get('/', fn () => redirect('/dashboard'));
@@ -53,5 +55,15 @@ Route::get('/login/keycloak/callback', function () {
     }
 });
 
+// Logout dan redirect ke halaman login Keycloak
+Route::get('/logout', function () {
+    Auth::logout();
+
+    // Redirect ke halaman logout Keycloak dengan redirect setelah logout ke halaman login
+    $keycloakLogoutUrl = env('KEYCLOAK_LOGOUT_URL', 'https://sso.reltroner.com/realms/reltroner/protocol/openid-connect/logout');
+    $redirectUri = urlencode(config('app.url') . '/login/keycloak');
+
+    return redirect("$keycloakLogoutUrl?redirect_uri=$redirectUri");
+})->name('logout');
 
 require __DIR__.'/auth.php';
