@@ -102,7 +102,13 @@
         <ul class="menu">
             <li class="sidebar-title">Menu</li>
 
-            {{-- @if(session('role') == 'Admin' || session('role') == 'HR Manager') --}}
+            {{-- Menu untuk semua user yang sudah login --}}
+            <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}" class="sidebar-link">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
 
             <li class="sidebar-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                 <a href="{{ route('profile.edit') }}" class="sidebar-link">
@@ -111,32 +117,16 @@
                 </a>
             </li>
 
-            <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <a href="{{ route('dashboard') }}" class="sidebar-link">
-                    <i class="bi bi-grid-fill"></i>
-                    <span>Dashboard</span>
-                </a>
+            {{-- Logout --}}
+            <li class="sidebar-item">
+                <form method="POST" action="{{ route('keycloak.logout') }}">
+                    @csrf
+                    <button type="submit" class="sidebar-link btn btn-link text-start w-100 p-0 m-0">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </li>
-
-            {{-- @endif --}}
-            @if(in_array(session('role'), ['Developer', 'Accountant', 'Data Entry', 'Animator', 'Marketer']))
-            <li class="sidebar-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <a href="index.html" class="sidebar-link">
-                    <i class="bi bi-grid-fill"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-
-            @endif
-
-            <form method="POST" action="{{ route('keycloak.logout') }}">
-                @csrf
-                <button type="submit" class="sidebar-link btn btn-link text-start w-100 p-0 m-0">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
-                </button>
-            </form>
-
         </ul>
     </div>
 </div>
