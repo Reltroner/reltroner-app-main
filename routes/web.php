@@ -58,9 +58,11 @@ Route::get('/login/keycloak/callback', function () {
 // Logout dan redirect ke halaman login Keycloak
 Route::get('/logout', function () {
     Auth::logout();
-    $keycloakLogoutUrl = env('KEYCLOAK_LOGOUT_URL', 'https://sso.reltroner.com/realms/reltroner/protocol/openid-connect/logout');
-    $redirectUri = config('app.url');
+
+    $keycloakLogoutUrl = env('KEYCLOAK_LOGOUT_URL'); // Sudah betul
+    $redirectUri = 'https://app.reltroner.com';      // ← tanpa trailing slash, tanpa path
+
     return redirect()->away("$keycloakLogoutUrl?redirect_uri=$redirectUri");
-})->name('keycloak.logout'); // ⬅ ganti nama route
+});
 
 require __DIR__.'/auth.php';
