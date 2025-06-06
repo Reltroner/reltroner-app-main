@@ -62,7 +62,7 @@ Route::get('/logout', function () {
     $keycloakLogoutUrl = env('KEYCLOAK_LOGOUT_URL');
     $redirectUri = 'https://app.reltroner.com/login/keycloak'; // ⬅ HARUS COCOK dengan Valid Post Logout Redirect URIs
 
-    return redirect('/login/keycloak'); // tanpa redirect_uri
+    return redirect()->away($keycloakLogoutUrl); // tanpa redirect_uri
 })->name('keycloak.logout');
 
 require __DIR__.'/auth.php';
