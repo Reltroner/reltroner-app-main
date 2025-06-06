@@ -30,6 +30,19 @@
 .stats-icon.blue   { background-color: #4dc4ff; }
 .stats-icon.red    { background-color: #ff6b6b; }
 
+/* Light theme */
+.purple-light  { background-color: #9b87fd; }
+.green-light   { background-color: #5ddab4; }
+.blue-light    { background-color: #4dc4ff; }
+.red-light     { background-color: #ff6b6b; }
+
+/* Dark theme */
+.purple-dark  { background-color: #6a5acd; }
+.green-dark   { background-color: #2ea679; }
+.blue-dark    { background-color: #248fc4; }
+.red-dark     { background-color: #cc4c4c; }
+
+
 @media print {
     header, nav, .breadcrumb-header, .btn, .alert, .sidebar, footer {
         display: none !important;
@@ -88,7 +101,7 @@
                 <a href="{{ $module['url'] }}" target="_blank" class="card-body px-4 py-4-5 text-decoration-none text-dark">
                     <div class="row">
                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
-                            <div class="stats-icon {{ $module['color'] }} mb-2">
+                            <div class="stats-icon mb-2 {{ $module['color'] }}-light dark:{{ $module['color'] }}-dark">
                                 <img src="{{ asset('images/' . $module['icon']) }}" alt="{{ $module['name'] }} Icon">
                             </div>
                         </div>
