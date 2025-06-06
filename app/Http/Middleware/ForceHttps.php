@@ -1,5 +1,5 @@
 <?php
-
+// app/Http/Middleware/ForceHttps.php
 namespace App\Http\Middleware;
 
 use Closure;
