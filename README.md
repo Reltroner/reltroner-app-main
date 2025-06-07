@@ -21,6 +21,41 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Installation and Setup
+
+1. Install PHP dependencies:
+   ```bash
+   composer install
+   ```
+2. Install JavaScript dependencies:
+   ```bash
+   npm install
+   ```
+3. Copy `.env.example` to `.env` and set the Keycloak variables.
+
+### Keycloak variables
+
+Add the following variables to your `.env` file:
+
+```
+KEYCLOAK_BASE_URL=
+KEYCLOAK_REALM=
+KEYCLOAK_CLIENT_ID=
+KEYCLOAK_CLIENT_SECRET=
+KEYCLOAK_REDIRECT_URI=
+KEYCLOAK_LOGOUT_URL=
+```
+
+### Running Tests
+
+Run the test suite with:
+
+```bash
+php artisan test
+```
+
+You may also execute `composer test` which clears cached configuration before running the tests.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
