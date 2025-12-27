@@ -1,5 +1,4 @@
-{{-- resources/views/auth/login.blade.php --}}
-@php
-    header("Location: " . route('login.keycloak'));
-    exit;
-@endphp
+{{-- SSO Gateway: local login disabled --}}
+<script>
+    window.location.href = "{{ route('sso.login') }}";
+</script>

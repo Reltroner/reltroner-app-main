@@ -119,9 +119,9 @@
 
             {{-- Logout --}}
             <li class="sidebar-item">
-                <a href="{{ route('keycloak.logout') }}" class="sidebar-link">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Logout</span>
+                <a href="{{ route('logout') }}"
+                    class="text-sm text-gray-700 hover:text-red-600">
+                    Logout
                 </a>
             </li>
         </ul>

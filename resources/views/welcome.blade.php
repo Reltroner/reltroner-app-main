@@ -38,6 +38,10 @@
                             Log in
                         </a>
 
+                        <a href="{{ route('sso.login') }}">
+                            Login with Reltroner SSO
+                        </a>
+
                         @if (Route::has('register'))
                             <a
                                 href="{{ route('register') }}"

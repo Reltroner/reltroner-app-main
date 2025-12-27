@@ -1,14 +1,12 @@
 <?php
 
 namespace App\Http;
-// Kernel.php
+
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
     protected $middleware = [
-        // Tambahkan global middleware di sini
-        \App\Http\Middleware\ForceHttps::class,
         \App\Http\Middleware\BlockBotUserAgent::class,
     ];
 
@@ -26,5 +24,10 @@ class Kernel extends HttpKernel
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+    ];
+
+    // ✅ INI YANG BENAR
+    protected $middlewareAliases = [
+        'sso' => \App\Http\Middleware\EnsureSSOAuthenticated::class,
     ];
 }
