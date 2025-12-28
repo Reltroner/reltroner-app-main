@@ -2,12 +2,39 @@
 {{-- resource/views/dashboard.blade.php --}}
 @section('content')
 <style>
-.card-hover-zoom {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+/* Module card text */
+.module-card h6 {
+    color: var(--text-color);
 }
-.card-hover-zoom:hover {
-    transform: scale(1.05);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+
+.module-card .module-name {
+    font-weight: 700;
+}
+
+/* Light mode */
+:root {
+    --text-color: #1f2937;
+}
+
+/* Dark mode */
+body.dark {
+    --text-color: #e5e7eb;
+}
+
+.theme-icon {
+    line-height: 1;
+    font-size: 14px;
+}
+
+.card-hover-zoom {
+    height: 100%;
+}
+
+.card-hover-zoom .card-body {
+    display: flex;
+    align-items: center;
+    min-height: 120px;
 }
 
 .stats-icon {
@@ -85,7 +112,7 @@
         @foreach ($modules as $module)
         <div class="col-6 col-lg-3 col-md-6">
             <div class="card card-hover-zoom">
-                <a href="{{ $module['url'] }}" target="_blank" class="card-body px-4 py-4-5 text-decoration-none text-dark">
+                <a href="{{ $module['url'] }}" target="_blank" class="card-body px-4 py-4-5 text-decoration-none module-card">
                     <div class="row">
                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
                             <div class="stats-icon {{ $module['color'] }} mb-2">
@@ -94,7 +121,7 @@
                         </div>
                         <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
                             <h6 class="text-muted font-semibold">Access</h6>
-                            <h6 class="font-extrabold mb-0 bg-[#9b87fd] dark:bg-purple-700">{{ $module['name'] }}</h6>
+                            <h6 class="font-extrabold mb-0">{{ $module['name'] }}</h6>
                         </div>
                     </div>
                 </a>

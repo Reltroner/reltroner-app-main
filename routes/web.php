@@ -17,7 +17,13 @@ use App\Http\Middleware\EnsureSSOAuthenticated;
 Route::get('/login', fn () => redirect()->route('sso.login'))->name('login');
 
 // Root → Dashboard
-Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/', function () {
+    if (session('sso_authenticated')) {
+        return redirect()->route('dashboard');
+    }
+
+    return redirect()->route('sso.login');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -32,13 +38,20 @@ Route::get('/sso/callback', [SSOController::class, 'callback'])
     ->name('sso.callback');
 
 Route::get('/logout', function () {
-    Session::flush();
+    $idToken = session('id_token');
 
-    return redirect(
-        config('services.keycloak.base_url')
+    session()->flush();
+
+    $query = http_build_query([
+        'post_logout_redirect_uri' => 'http://localhost:8000/',
+        'id_token_hint'            => $idToken,
+    ]);
+
+    return redirect()->away(
+        rtrim(config('services.keycloak.base_url'), '/')
         . '/realms/' . config('services.keycloak.realm')
-        . '/protocol/openid-connect/logout'
-        . '?redirect_uri=' . urlencode(url('/'))
+        . '/protocol/openid-connect/logout?'
+        . $query
     );
 })->name('logout');
 
