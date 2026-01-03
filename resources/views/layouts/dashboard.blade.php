@@ -95,13 +95,16 @@
                             </a>
                         </div>
 
-                        {{-- THEME TOGGLE --}}
-                        <div class="theme-toggle d-flex align-items-center gap-2">
-                            <span class="theme-icon sun">☀️</span>
-                            <div class="form-check form-switch m-0">
-                                <input class="form-check-input" type="checkbox" id="toggle-dark">
-                            </div>
-                            <span class="theme-icon moon">🌙</span>
+                        {{-- THEME TOGGLE (STABLE & LOCKED) --}}
+                        <div class="theme-toggle">
+                            <span class="theme-icon">☀️</span>
+
+                            <label class="theme-switch">
+                                <input type="checkbox" id="toggle-dark">
+                                <span class="slider"></span>
+                            </label>
+
+                            <span class="theme-icon">🌙</span>
                         </div>
                     </div>
 
@@ -192,6 +195,23 @@
             enableSeconds: true,
             dateFormat: 'Y-m-d H:i:s',
             time_24hr: true
+        });
+    </script>
+    <script>
+        // Toggle sidebar
+        document.querySelector('.burger-btn').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
+    </script>
+    <script>
+        // Flash message auto-dismiss
+        document.addEventListener('DOMContentLoaded', function () {
+            const flashMessage = document.getElementById('flash-message');
+            if (flashMessage) {
+                setTimeout(() => {
+                    flashMessage.remove();
+                }, 5000); // 5 seconds
+            }
         });
     </script>
 

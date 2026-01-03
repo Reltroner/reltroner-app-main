@@ -111,17 +111,17 @@ body.dark {
 
         @foreach ($modules as $module)
         <div class="col-6 col-lg-3 col-md-6">
-            <div class="card card-hover-zoom">
+            <div class="card card-hover card-hover-zoom">
                 <a href="{{ $module['url'] }}" target="_blank" class="card-body px-4 py-4-5 text-decoration-none module-card">
                     <div class="row">
-                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start">
+                        <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start gap-3">
                             <div class="stats-icon {{ $module['color'] }} mb-2">
                                 <img src="{{ asset('images/' . $module['icon']) }}" alt="{{ $module['name'] }} Icon">
                             </div>
                         </div>
                         <div class="col-md-8 col-lg-12 col-xl-12 col-xxl-7">
                             <h6 class="text-muted font-semibold">Access</h6>
-                            <h6 class="font-extrabold mb-0">{{ $module['name'] }}</h6>
+                            <h6 class="font-semibold module-title text-gray-900 dark:text-gray-100 mb-0">{{ $module['name'] }}</h6>
                         </div>
                     </div>
                 </a>
@@ -131,4 +131,26 @@ body.dark {
 
     </div>
 </div>
+<script>
+    // Theme toggle script
+    document.getElementById('toggle-dark').addEventListener('change', function() {
+        document.body.classList.toggle('dark', this.checked);
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('toggle-dark');
+    const root = document.documentElement;
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    root.setAttribute('data-theme', savedTheme);
+    toggle.checked = savedTheme === 'dark';
+
+    toggle.addEventListener('change', () => {
+        const theme = toggle.checked ? 'dark' : 'light';
+        root.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    });
+});
+</script>
 @endsection
