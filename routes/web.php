@@ -1,22 +1,31 @@
 <?php
+// routes/web.php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Session;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SSOController;
+
+use App\Http\Controllers\{
+    DashboardController,
+    ProfileController,
+    SSOController
+};
+
+use App\Http\Controllers\Modules\FinanceRedirectController;
 use App\Http\Middleware\EnsureSSOAuthenticated;
 
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
+| - Tidak memerlukan SSO
+| - Entry awal sebelum autentikasi
+|--------------------------------------------------------------------------
 */
 
-// Login Breeze dialihkan ke SSO
-Route::get('/login', fn () => redirect()->route('sso.login'))->name('login');
+// Breeze login → selalu diarahkan ke SSO
+Route::get('/login', fn () => redirect()->route('sso.login'))
+    ->name('login');
 
-// Root → Dashboard
+// Root → dashboard jika sudah SSO, jika belum → SSO login
 Route::get('/', function () {
     if (session('sso_authenticated')) {
         return redirect()->route('dashboard');
@@ -25,9 +34,13 @@ Route::get('/', function () {
     return redirect()->route('sso.login');
 });
 
+
 /*
 |--------------------------------------------------------------------------
-| SSO Routes (Keycloak)
+| SSO Routes (Keycloak) — PHASE 2 (FROZEN)
+|--------------------------------------------------------------------------
+| - JANGAN diubah flow-nya
+| - Ini adalah auth authority
 |--------------------------------------------------------------------------
 */
 
@@ -43,7 +56,7 @@ Route::get('/logout', function () {
     session()->flush();
 
     $query = http_build_query([
-        'post_logout_redirect_uri' => 'http://localhost:8000/',
+        'post_logout_redirect_uri' => config('app.url') . '/',
         'id_token_hint'            => $idToken,
     ]);
 
@@ -55,32 +68,69 @@ Route::get('/logout', function () {
     );
 })->name('logout');
 
+
 /*
 |--------------------------------------------------------------------------
 | Gateway Protected Routes (SSO ONLY)
 |--------------------------------------------------------------------------
+| - User sudah tervalidasi oleh Keycloak
+| - Gateway memegang session SSO
+|--------------------------------------------------------------------------
 */
 
-Route::middleware([EnsureSSOAuthenticated::class])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
+Route::middleware(['web', EnsureSSOAuthenticated::class])
+    ->group(function () {
 
-    Route::get('/profile', [ProfileController::class, 'edit'])
-        ->name('profile.edit');
+        /*
+        |--------------------------------------------------------------------------
+        | Gateway Dashboard
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard');
 
-    Route::patch('/profile', [ProfileController::class, 'update'])
-        ->name('profile.update');
 
-    Route::delete('/profile', [ProfileController::class, 'destroy'])
-        ->name('profile.destroy');
-});
+        /*
+        |--------------------------------------------------------------------------
+        | Profile (Gateway-local)
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/profile', [ProfileController::class, 'edit'])
+            ->name('profile.edit');
+
+        Route::patch('/profile', [ProfileController::class, 'update'])
+            ->name('profile.update');
+
+        Route::delete('/profile', [ProfileController::class, 'destroy'])
+            ->name('profile.destroy');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ERP Module Routers — PHASE 3
+        |--------------------------------------------------------------------------
+        | - Gateway = token issuer
+        | - Gateway = redirector
+        | - Module = PASIF (consume only)
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/modules/finance', FinanceRedirectController::class)
+            ->name('modules.finance');
+
+        // future (Phase 4+)
+        // Route::get('/modules/hrm', HrmRedirectController::class);
+        // Route::get('/modules/inventory', InventoryRedirectController::class);
+    });
+
 
 /*
 |--------------------------------------------------------------------------
-| Breeze Auth Routes
+| Breeze Auth Routes (INERT)
 |--------------------------------------------------------------------------
-| Tetap disertakan agar Blade & helper tidak error
-| Tapi TIDAK DIPAKAI
+| - Dibiarkan agar Blade & helper tidak error
+| - TIDAK dipakai sebagai auth
+|--------------------------------------------------------------------------
 */
 
 require __DIR__ . '/auth.php';
