@@ -12,9 +12,12 @@ class SSOController extends Controller
     /**
      * Redirect user to Keycloak Authorization Endpoint
      */
-    public function redirect()
+    public function redirect(Request $request)
     {
-        // 🔒 LOCK redirect_uri (JANGAN DINAMIS)
+        // 🔒 Pastikan session stabil sebelum OIDC flow
+        $request->session()->regenerate();
+
+        // 🔒 LOCK redirect_uri
         $redirectUri = rtrim(config('services.keycloak.redirect_uri'), '/');
 
         // 🧠 CSRF-like protection
@@ -85,6 +88,16 @@ class SSOController extends Controller
             'sso_authenticated' => true,
             'access_token'      => $token['access_token'],
             'id_token'          => $token['id_token'] ?? null,
+        ]);
+
+        Log::info('SSO redirect issued', [
+            'session_id' => session()->getId(),
+        ]);
+
+        Log::info('SSO callback received', [
+            'session_id'     => session()->getId(),
+            'state_query'    => $request->state,
+            'state_session'  => session('sso_state'),
         ]);
 
         // Cleanup

@@ -118,6 +118,11 @@ Route::middleware(['web', EnsureSSOAuthenticated::class])
         Route::get('/modules/finance', FinanceRedirectController::class)
             ->name('modules.finance');
 
+        Route::get('/__session-test', function () {
+            session(['test' => 'ok']);
+            return session('test');
+        });
+
         // future (Phase 4+)
         // Route::get('/modules/hrm', HrmRedirectController::class);
         // Route::get('/modules/inventory', InventoryRedirectController::class);
