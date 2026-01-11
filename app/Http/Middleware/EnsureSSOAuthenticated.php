@@ -9,10 +9,16 @@ class EnsureSSOAuthenticated
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!session('sso_authenticated')) {
-            return redirect()->route('sso.login');
+        // Allow SSO endpoints unconditionally
+        if ($request->routeIs('sso.login', 'sso.callback')) {
+            return $next($request);
         }
 
-        return $next($request);
+        if (session('sso_authenticated') === true) {
+            return $next($request);
+        }
+
+        return redirect()->route('sso.login');
     }
 }
+

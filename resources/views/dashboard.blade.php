@@ -1,5 +1,5 @@
 @extends('layouts.dashboard')
-{{-- resource/views/dashboard.blade.php --}}
+{{-- app.reltroner.com resource/views/dashboard.blade.php --}}
 @section('content')
 <style>
 
@@ -103,16 +103,16 @@ body.dark {
         @php
             $modules = [
                 ['name' => 'HRM', 'url' => 'https://hrm.reltroner.com', 'icon' => 'user.svg', 'color' => 'purple'],
-                ['name' => 'Finance', 'url' => 'https://finance.reltroner.com', 'icon' => 'card.svg', 'color' => 'green'],
-                ['name' => 'Inventory', 'url' => 'https://inventory.reltroner.com', 'icon' => 'box.svg', 'color' => 'blue'],
-                ['name' => 'CRM', 'url' => 'https://crm.reltroner.com', 'icon' => 'mail.svg', 'color' => 'red'],
+                ['name' => 'Finance', 'url' => route('modules.finance'), 'icon' => 'card.svg', 'color' => 'green'],
+                ['name' => 'Inventory', 'url' => '#', 'icon' => 'box.svg', 'color' => 'blue'],
+                ['name' => 'CRM', 'url' => '#', 'icon' => 'mail.svg', 'color' => 'red'],
             ];
         @endphp
 
         @foreach ($modules as $module)
         <div class="col-6 col-lg-3 col-md-6">
             <div class="card card-hover card-hover-zoom">
-                <a href="{{ $module['url'] }}" target="_blank" class="card-body px-4 py-4-5 text-decoration-none module-card">
+                <a href="{{ $module['url'] }}" class="card-body px-4 py-4-5 text-decoration-none module-card">
                     <div class="row">
                         <div class="col-md-4 col-lg-12 col-xl-12 col-xxl-5 d-flex justify-content-start gap-3">
                             <div class="stats-icon {{ $module['color'] }} mb-2">

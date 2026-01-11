@@ -1,24 +1,33 @@
 <?php
-// app/Services/SSO/ModuleTokenFactory.php
+// gateway app/Services/SSO/ModuleTokenFactory.php
 namespace App\Services\SSO;
 
 use Firebase\JWT\JWT;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Config;
+use RuntimeException;
 
 class ModuleTokenFactory
 {
+    /**
+     * Issue short-lived JWT for ERP module consumption
+     */
     public function make(array $context): string
     {
+        if (!session('sso_authenticated')) {
+            throw new RuntimeException('Gateway session not authenticated.');
+        }
+
         $now = time();
 
         $payload = [
-            'iss' => config('services.gateway.issuer'),
+            'iss' => Config::get('services.gateway.issuer'),
             'aud' => $this->audience($context['module']),
             'sub' => session('keycloak_sub'),
             'email' => session('keycloak_email'),
 
             'iat' => $now,
-            'exp' => $now + 60,
+            'exp' => $now + 60, // 60s — intentional (handoff only)
             'jti' => (string) Str::uuid(),
 
             'ctx' => [
@@ -29,21 +38,22 @@ class ModuleTokenFactory
 
         return JWT::encode(
             $payload,
-            config('services.gateway.signing_key'),
+            Config::get('services.gateway.signing_key'),
             'HS256'
-        );
-
-        dd(
-            config('services.gateway.issuer'),
-            config('services.modules.finance')
         );
     }
 
+    /**
+     * Resolve module audience
+     */
     protected function audience(string $module): string
     {
         return match ($module) {
-            'finance' => 'finance.reltroner.com',
-            default => abort(400, 'Unknown module'),
+            'finance' => parse_url(
+                Config::get('services.modules.finance'),
+                PHP_URL_HOST
+            ),
+            default => throw new RuntimeException("Unknown module audience [$module]"),
         };
     }
 }

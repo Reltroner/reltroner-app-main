@@ -14,30 +14,43 @@ class SSOController extends Controller
      */
     public function redirect(Request $request)
     {
-        // 🔒 Pastikan session stabil sebelum OIDC flow
-        $request->session()->regenerate();
+        // ✅ Jika sudah login → langsung dashboard
+        if (session('sso_authenticated') === true) {
+            return redirect()->route('dashboard');
+        }
 
-        // 🔒 LOCK redirect_uri
-        $redirectUri = rtrim(config('services.keycloak.redirect_uri'), '/');
+        // 🔁 Jika SSO sudah dimulai → LANJUTKAN redirect
+        if (session()->has('sso_state')) {
+            $state = session('sso_state');
 
-        // 🧠 CSRF-like protection
-        $state = bin2hex(random_bytes(16));
-        session(['sso_state' => $state]);
+            Log::info('SSO continuing existing flow', [
+                'session_id' => session()->getId(),
+                'state' => $state,
+            ]);
+        } else {
+            // 🔐 INITIATE SSO (FIRST TIME)
+            $state = bin2hex(random_bytes(16));
+            session(['sso_state' => $state]);
+
+            Log::info('SSO redirect issued', [
+                'session_id' => session()->getId(),
+                'state' => $state,
+            ]);
+        }
 
         $query = http_build_query([
             'client_id'     => config('services.keycloak.client_id'),
             'response_type' => 'code',
             'scope'         => 'openid',
-            'redirect_uri'  => $redirectUri,
+            'redirect_uri'  => config('services.keycloak.redirect_uri'),
             'state'         => $state,
         ]);
 
-        $authUrl =
+        return redirect()->away(
             rtrim(config('services.keycloak.base_url'), '/')
             . '/realms/' . config('services.keycloak.realm')
-            . '/protocol/openid-connect/auth?' . $query;
-
-        return redirect()->away($authUrl);
+            . '/protocol/openid-connect/auth?' . $query
+        );
     }
 
     /**
@@ -45,17 +58,30 @@ class SSOController extends Controller
      */
     public function callback(Request $request)
     {
-        // ❌ No code → reject
+        if (!session()->has('sso_state')) {
+            Log::error('SSO callback without active state', [
+                'session_id' => session()->getId(),
+                'state_query' => $request->state,
+            ]);
+
+            abort(403, 'SSO state expired.');
+        }
+
         abort_if(!$request->has('code'), 403, 'Missing authorization code.');
 
-        // ❌ State mismatch → reject
+        // 🔍 DEBUG STATE (PENTING UNTUK AUDIT)
+        Log::info('SSO callback received', [
+            'session_id'    => session()->getId(),
+            'state_query'   => $request->state,
+            'state_session' => session('sso_state'),
+        ]);
+
         abort_if(
             !$request->has('state') || $request->state !== session('sso_state'),
             403,
             'Invalid SSO state.'
         );
 
-        // 🔒 LOCK redirect_uri (HARUS IDENTIK dgn yg di auth request)
         $redirectUri = rtrim(config('services.keycloak.redirect_uri'), '/');
 
         $tokenResponse = Http::asForm()->post(
@@ -83,25 +109,24 @@ class SSOController extends Controller
 
         abort_if(!isset($token['access_token']), 403, 'Access token not returned.');
 
-        // 🔑 AUTH GATEWAY SESSION (TANPA DB, TANPA USER)
+        // 🔒 LOGIN SUKSES → baru regenerate session (ANTI FIXATION)
+        $request->session()->regenerate();
+
+        session()->put('sso_authenticated', true);
+        session()->put('gateway_auth_at', now()->timestamp);
+
         session([
             'sso_authenticated' => true,
             'access_token'      => $token['access_token'],
             'id_token'          => $token['id_token'] ?? null,
         ]);
 
-        Log::info('SSO redirect issued', [
+        // 🧹 Cleanup
+        session()->forget('sso_state');
+
+        Log::info('SSO session established', [
             'session_id' => session()->getId(),
         ]);
-
-        Log::info('SSO callback received', [
-            'session_id'     => session()->getId(),
-            'state_query'    => $request->state,
-            'state_session'  => session('sso_state'),
-        ]);
-
-        // Cleanup
-        session()->forget('sso_state');
 
         return redirect()->route('dashboard');
     }
