@@ -57,6 +57,9 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "test:domain": [
+            "@php artisan test --testsuite=Domain"
         ]
     },
     "extra": {
