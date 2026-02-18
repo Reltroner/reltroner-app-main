@@ -10,14 +10,24 @@ abstract class TestCase extends BaseTestCase
     /**
      * Act as authenticated SSO user (Gateway-aware)
      */
-    protected function actingAsSSO(User $user)
+    protected function actingAsSSO($user)
     {
-        return $this
-            ->withSession([
-                'sso_authenticated' => true,
-                'keycloak_sub'      => (string) $user->id,
-                'keycloak_email'    => $user->email,
-            ])
-            ->actingAs($user);
+        $this->actingAs($user);
+
+        $this->withSession([
+            'sso_authenticated' => true,
+            'access_token'      => 'fake-access-token',
+            'refresh_token'     => 'fake-refresh-token',
+            'expires_at'        => now()->addHour()->timestamp,
+            'identity'          => [
+                'sub' => $user->id,
+                'aud' => config('services.keycloak.client_id'),
+                'iss' => config('services.keycloak.base_url') . '/realms/' . config('services.keycloak.realm'),
+                'exp' => now()->addHour()->timestamp,
+            ],
+            'gateway_auth_at'   => now()->timestamp,
+        ]);
+
+        return $this;
     }
 }

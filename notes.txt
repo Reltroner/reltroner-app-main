@@ -1,0 +1,336 @@
+================================================================================
+RINGAN PEMETAAN STRUKTUR DIREKTORI - RELTRONER-APP-MAIN
+================================================================================
+Tanggal: 8 Februari 2026
+Framework: Laravel 11
+Tujuan: GATEWAY + SSO (Keycloak) + Module Redirector
+
+================================================================================
+1. STRUKTUR UTAMA PROJECT
+================================================================================
+
+reltroner-app-main/
+├── app/                              → Kode aplikasi Laravel
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── DashboardController.php
+│   │   │   ├── ProfileController.php
+│   │   │   ├── SSOController.php
+│   │   │   └── Modules/
+│   │   │       └── FinanceRedirectController.php
+│   │   ├── Kernel.php
+│   │   ├── Middleware/
+│   │   │   └── EnsureSSOAuthenticated.php
+│   │   └── Requests/
+│   ├── Models/
+│   │   └── User.php
+│   ├── Providers/
+│   │   ├── AppServiceProvider.php
+│   │   ├── EventServiceProvider.php
+│   │   └── RouteServiceProvider.php
+│   ├── Services/
+│   │   └── SSO/                     → Logika SSO Keycloak
+│   └── View/
+│       └── Components/
+│
+├── bootstrap/                        → Bootstrap aplikasi
+│   ├── app.php
+│   ├── providers.php
+│   └── cache/
+│       ├── packages.php
+│       └── services.php
+│
+├── config/                           → File konfigurasi
+│   ├── app.php
+│   ├── auth.php
+│   ├── cache.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── logging.php
+│   ├── mail.php
+│   ├── queue.php
+│   ├── services.php               → Konfigurasi Keycloak/SSO
+│   └── session.php
+│
+├── database/                         → Migrasi & seeder
+│   ├── factories/
+│   │   └── UserFactory.php
+│   ├── migrations/
+│   │   ├── 0001_01_01_000000_create_users_table.php
+│   │   ├── 0001_01_01_000001_create_cache_table.php
+│   │   └── 0001_01_01_000002_create_jobs_table.php
+│   └── seeders/
+│       └── DatabaseSeeder.php
+│
+├── public/                           → Web root publik
+│   ├── index.php
+│   ├── robots.txt
+│   ├── assets/
+│   │   └── css/
+│   ├── build/
+│   │   └── manifest.json            → Vite build manifest
+│   ├── images/
+│   ├── mazer/                       → UI Template (HTML + assets)
+│   │   ├── assets/
+│   │   │   ├── extensions/          → Libraries (flatpickr, jQuery, etc)
+│   │   │   └── static/
+│   │   │       ├── fonts/
+│   │   │       ├── images/
+│   │   │       └── js/
+│   │   ├── *.html                   → Template pages
+│   │   └── manifest.json
+│   └── ...
+│
+├── resources/                        → Source assets & views
+│   ├── css/
+│   │   └── app.css
+│   ├── js/
+│   │   ├── app.js
+│   │   └── bootstrap.js
+│   └── views/
+│       ├── auth/                    → Login, register, password reset
+│       ├── components/              → Reusable Blade components
+│       ├── layouts/
+│       │   ├── app.blade.php        → Main layout
+│       │   ├── dashboard.blade.php
+│       │   ├── guest.blade.php
+│       │   └── navigation.blade.php
+│       ├── profile/
+│       │   ├── edit.blade.php
+│       │   └── partials/
+│       ├── dashboard.blade.php
+│       └── welcome.blade.php
+│
+├── routes/                           → Definisi routing
+│   ├── web.php                      → PENTING: SSO + Gateway routes
+│   ├── api.php
+│   ├── auth.php                     → Breeze auth (inert)
+│   └── console.php
+│
+├── storage/                          → Runtime data
+│   ├── app/
+│   ├── framework/
+│   │   ├── cache/
+│   │   ├── sessions/
+│   │   ├── views/
+│   │   └── testing/
+│   └── logs/
+│
+├── tests/                            → Unit & feature tests
+│   ├── Domain/
+│   │   ├── Middleware/
+│   │   ├── Redirect/
+│   │   └── SSO/
+│   ├── Feature/
+│   │   └── Auth/
+│   ├── Unit/
+│   └── TestCase.php
+│
+├── vendor/                           → Dependencies (Composer)
+│
+└── ROOT FILES:
+    ├── artisan                       → Laravel CLI
+    ├── composer.json
+    ├── composer.lock
+    ├── package.json                  → Node dependencies (Vite, Tailwind)
+    ├── package-lock.json
+    ├── .env                          → Environment variables (di-ignore)
+    ├── .env.example
+    ├── .gitignore                    → Git ignore patterns
+    ├── phpunit.xml                   → PHPUnit config
+    ├── vite.config.js                → Vite bundler config
+    ├── tailwind.config.js            → Tailwind CSS config
+    ├── postcss.config.js
+    ├── copy-manifest.js              → Custom build script
+    ├── structure.txt                 → File pemetaan direktori
+    ├── README.md
+    ├── EULA.md
+    ├── LICENSE.md
+    └── notes.txt                     → File ini
+
+
+================================================================================
+2. POLA DAN FITUR UTAMA (BERDASARKAN routes/web.php)
+================================================================================
+
+A. PUBLIC ROUTES (Tanpa SSO):
+   - GET /login          → Redirect ke SSO login
+   - GET /               → Redirect ke dashboard jika SSO authenticated, else SSO login
+
+B. SSO ROUTES (Keycloak) - PHASE 2 (FROZEN):
+   - GET /sso/login      → Trigger SSO login redirect
+   - GET /sso/callback   → Handle Keycloak callback
+   - GET /logout         → Logout dengan ID token hint
+
+C. PROTECTED ROUTES (SSO-required):
+   Middleware: ['web', EnsureSSOAuthenticated::class]
+   
+   Dashboard:
+   - GET /dashboard      → [DashboardController@index]
+   
+   Profile (Gateway-local):
+   - GET /profile        → [ProfileController@edit]
+   - PATCH /profile      → [ProfileController@update]
+   - DELETE /profile     → [ProfileController@destroy]
+   
+   Module Redirector (PHASE 3):
+   - GET /modules/finance    → [FinanceRedirectController] (Token issuer & redirector)
+   - GET /__session-test     → Test session (dev only)
+   
+   Future (PHASE 4+):
+   (Commented out)
+   - GET /modules/hrm
+   - GET /modules/inventory
+
+D. INERT ROUTES:
+   - Breeze auth routes (required untuk Blade helper, tidak digunakan)
+
+
+================================================================================
+3. KONFIGURASI PENTING
+================================================================================
+
+KEYCLOAK CONFIG (services.keycloak):
+- base_url      → URL Keycloak server
+- realm         → Realm name untuk endpoints
+
+AUTH:
+- Session-based SSO authentication
+- ID token disimpan di session untuk logout
+
+FLOWS:
+1. User akses / → Check session('sso_authenticated')
+2. Belum SSO → Redirect /sso/login → Keycloak
+3. Callback → /sso/callback → Validate & set session
+4. Logout → /logout → Clear session & Keycloak logout
+
+
+================================================================================
+4. IGNORED FILES (.gitignore)
+================================================================================
+
+- *.log
+- .env (environment variables)
+- node_modules/
+- vendor/
+- storage/logs/
+- storage/*.key
+- storage/pail/
+- /vendor/
+- public/hot
+- public/storage
+- .phpunit.cache
+- .fleet, .idea, .nova, .vscode, .zed
+
+
+================================================================================
+5. BUILD & DEPENDENCIES
+================================================================================
+
+Frontend:
+- Vite (build bundler) → vite.config.js
+- Tailwind CSS → tailwind.config.js
+- PostCSS → postcss.config.js
+
+Backend:
+- Laravel 11 (Framework)
+- PHP 8.2+ (assumed)
+- Composer (package manager)
+
+Resources:
+- Mazer UI Template (public/mazer/) untuk reference/fallback
+- jQuery, date pickers, summernote, TinyMCE, etc (external libraries)
+
+
+================================================================================
+6. KEY DIRECTORIES & PURPOSES
+================================================================================
+
+Directory               | Purpose
+-----------------------|-------------------------------------------------------
+app/Http/Controllers/   | Request handlers (Dashboard, Profile, SSO, Finance)
+app/Services/SSO/       | SSO business logic & token generation
+config/services.php     | Keycloak configuration
+resources/views/        | Blade templates (auth, dashboard, profile)
+public/mazer/           | UI template (static fallback)
+storage/                | Logs, cache, sessions
+tests/                  | Unit & feature tests
+routes/web.php          | Main routing rules (kritical - PHASE 2 frozen)
+
+
+================================================================================
+7. DEVELOPMENT PHASES
+================================================================================
+
+PHASE 1: Setup ✓
+        - Initial Laravel scaffolding
+
+PHASE 2: SSO (Keycloak) - FROZEN ✓
+        - /sso/login, /sso/callback, /logout
+        - EnsureSSOAuthenticated middleware
+        - Session-based auth
+
+PHASE 3: ERP Module Routers (In Progress?)
+        - /modules/finance (FinanceRedirectController)
+        - Gateway = token issuer & redirector
+        - Module = passive consumer only
+
+PHASE 4+: Future Modules
+        - /modules/hrm
+        - /modules/inventory
+
+
+================================================================================
+8. CRITICAL FILES
+================================================================================
+
+1. routes/web.php
+   - JANGAN DIUBAH FLOW-NYA (Phase 2 frozen)
+   - Ini adalah auth authority utama
+
+2. config/services.php
+   - Konfigurasi Keycloak (base_url, realm)
+
+3. app/Http/Controllers/SSOController.php
+   - Logika SSO redirect & callback
+
+4. app/Http/Middleware/EnsureSSOAuthenticated.php
+   - Middleware proteksi route (session check)
+
+5. app/Http/Controllers/Modules/FinanceRedirectController.php
+   - Module redirect logic untuk Finance
+
+
+================================================================================
+9. QUICK REFERENCE
+================================================================================
+
+Command Useful:
+- php artisan serve --host=0.0.0.0 --port=8000 (if cli "php artisan serve" failed)
+- php artisan serve                    → Start dev server
+- php artisan migrate                  → Run migrations
+- php artisan tinker                   → Interactive shell
+- npm run dev                          → Vite dev mode
+- npm run build                        → Vite production build
+- ./vendor/bin/phpunit                 → Run tests
+
+Git Ignored:
+- .env (use .env.example)
+- node_modules/
+- vendor/
+- /storage/logs/
+
+Entry Points:
+- Web: http://app.reltroner.test:8000
+- Keycloak: config('services.keycloak.base_url')
+
+
+================================================================================
+END OF NOTES
+================================================================================
+
+php artisan serve --host=0.0.0.0 --port=8000
+
+http://app.reltroner.test:8000
+
+php artisan serve --host=127.0.0.1 --port=8000
