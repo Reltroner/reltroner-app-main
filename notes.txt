@@ -336,3 +336,13 @@ php artisan serve --host=0.0.0.0 --port=8000
 http://app.reltroner.test:8000
 
 php artisan serve --host=127.0.0.1 --port=8000
+
+cli pengalaman debugging error testunit:
+
+Get-ChildItem -Recurse app -Filter *.php | Select-String "extends TestCase"
+
+php artisan clear-compiled
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+composer dump-autoload

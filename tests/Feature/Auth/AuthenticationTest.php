@@ -13,8 +13,7 @@ class AuthenticationTest extends TestCase
     public function test_login_screen_can_be_rendered(): void
     {
         $response = $this->get('/login');
-
-        $response->assertStatus(200);
+        $response->assertRedirect(route('sso.login'));
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
@@ -42,13 +41,12 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_users_can_logout(): void
+    public function test_logout_redirects_to_keycloak(): void
     {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->post('/logout');
 
-        $this->assertGuest();
-        $response->assertRedirect('/');
+        $response->assertStatus(302);
     }
 }

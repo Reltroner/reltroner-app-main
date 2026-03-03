@@ -22,6 +22,7 @@
 **Reltroner Gateway** is the **central authentication, authorization, and trust authority** for the Reltroner ecosystem.
 
 This service is responsible for:
+
 - User authentication (SSO)
 - Token issuance (JWT)
 - Cross-module trust verification
@@ -58,6 +59,11 @@ Downstream services (Finance, HRM, ERP, etc.) **never authenticate users directl
 - Clear issuer & audience checks
 - No silent fallback or auto-login
 
+### 4️⃣ Determinism Over Complexity
+- Unit tests must be deterministic
+- Crypto correctness belongs to cryptographic libraries
+- Gateway tests validate behavior, not OpenSSL internals
+
 ---
 
 ## 🔐 Authentication Flow (High Level)
@@ -86,7 +92,7 @@ npm install
 
 ### 2️⃣ Environment Configuration
 
-Copy `.env.example` to `.env` and configure the following **Keycloak variables**:
+Copy `.env.example` to `.env` and configure:
 
 ```env
 KEYCLOAK_BASE_URL=
@@ -97,7 +103,7 @@ KEYCLOAK_REDIRECT_URI=
 KEYCLOAK_LOGOUT_URL=
 ```
 
-Additional recommended gateway variables:
+Recommended gateway variables:
 
 ```env
 APP_URL=http://app.reltroner.test
@@ -109,30 +115,57 @@ JWT_ISSUER=reltroner-gateway
 
 ## 🧪 Testing
 
-Run the full test suite with:
-
-```bash
-composer test
-```
-
-or:
+Run full test suite:
 
 ```bash
 php artisan test
 ```
 
-Tests focus on:
+Tests cover:
 
-* Authentication flow
-* Token issuance
-* Invalid token rejection
+* SSO redirect flow
+* Callback validation
+* State mismatch protection
+* JWT leeway tolerance
+* Module trust validation
+* Audience validation
 * Gateway-only responsibilities
+
+---
+
+## ⚠️ Known Issue — Windows OpenSSL RSA (Test Environment)
+
+On some Windows PHP builds (e.g., Laragon), RSA signing or verification may throw:
+
+```
+DomainException: OpenSSL unable to validate key
+```
+
+This is caused by:
+
+* Windows OpenSSL binding strictness
+* PEM formatting sensitivity
+* Environment-level crypto parsing
+
+### Important:
+
+This does **NOT** affect production logic.
+
+Gateway production path uses:
+
+```
+JWKS → RS256 verification
+```
+
+Unit tests may use deterministic test-mode keys to avoid OS-specific OpenSSL behavior.
+
+This is an **environment constraint**, not a gateway security flaw.
 
 ---
 
 ## 🔗 Integration with Other Modules
 
-Downstream modules must configure:
+Downstream modules configure:
 
 ```env
 RELTRONER_GATEWAY_ISSUER=http://app.reltroner.test
@@ -140,8 +173,13 @@ RELTRONER_GATEWAY_AUDIENCE=finance.reltroner.test
 RELTRONER_MODULE_SIGNING_KEY=shared-secret
 ```
 
-Gateway **never depends on module state**.
-Modules **must trust the gateway**, not the other way around.
+Gateway:
+
+* Does not depend on module state
+* Does not call module APIs
+* Only issues identity trust tokens
+
+Modules must trust the gateway — not vice versa.
 
 ---
 
@@ -157,12 +195,22 @@ Modules **must trust the gateway**, not the other way around.
 
 ## ⚠️ Design Constraints
 
-* ❌ No business logic
-* ❌ No accounting logic
-* ❌ No cross-module mutation
-* ✅ Authentication & trust only
+This repository must remain minimal and security-focused.
 
-This repository **must remain lean and security-focused**.
+### ❌ Never Add
+
+* Business logic
+* Accounting logic
+* Cross-module mutation
+* Session storage replication
+* Feature creep
+
+### ✅ Only Responsible For
+
+* Authentication
+* Token issuance
+* Trust validation
+* Identity boundary enforcement
 
 ---
 
@@ -174,22 +222,36 @@ This repository **must remain lean and security-focused**.
 | 2     | JWT Trust Model            | ✅ done  |
 | 3     | Multi-module Audience      | ✅ done  |
 | 4     | Token Hardening & Rotation | planned |
+| 5     | Key Rotation Automation    | planned |
+
+---
+
+## 🧩 Engineering Philosophy
+
+Identity systems must be:
+
+* Predictable
+* Auditable
+* Boring
+* Deterministic
+
+Complexity belongs in business modules — not in the trust boundary.
 
 ---
 
 ## 🤝 Contribution Rules
 
-* Do not add domain-specific logic
 * Do not weaken token validation
-* Security reviews required for all changes
+* Do not add implicit trust
+* Security review required for crypto changes
+* No OpenSSL experimentation in production path
 
 ---
 
 ## 📄 License
 
-This project is built on top of the **Laravel Framework**.
+Built on top of **Laravel Framework (MIT License)**.
 
-Laravel is open-sourced software licensed under the **MIT License**.
 Reltroner Gateway follows the same license unless stated otherwise.
 
 ---

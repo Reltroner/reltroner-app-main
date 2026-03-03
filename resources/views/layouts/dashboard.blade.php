@@ -135,10 +135,18 @@
                         </li>
 
                         <li class="sidebar-item">
-                            <a href="{{ route('logout') }}" class="sidebar-link text-danger">
-                                <i class="bi bi-box-arrow-right"></i>
-                                <span>Logout</span>
-                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="w-100">
+                                @csrf
+
+                                <button
+                                    type="submit"
+                                    class="sidebar-link text-danger border-0 bg-transparent w-100 text-start d-flex align-items-center"
+                                    onclick="return confirm('Are you sure you want to logout?');"
+                                >
+                                    <i class="bi bi-box-arrow-right me-2"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </form>
                         </li>
                     </ul>
                 </div>
