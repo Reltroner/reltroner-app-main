@@ -329,6 +329,8 @@ Entry Points:
 END OF NOTES
 ================================================================================
 
+turn on the docker first!~
+
 php artisan serve --host=0.0.0.0 --port=8000
 
 http://app.reltroner.test:8000

@@ -156,7 +156,7 @@
             <footer class="mt-5">
                 <div class="footer clearfix text-muted">
                     <div class="float-start">
-                        <p>2025 &copy; Reltroner Studio</p>
+                        <p>2026 &copy; Reltroner Studio</p>
                     </div>
                     <div class="float-end">
                         <p>
