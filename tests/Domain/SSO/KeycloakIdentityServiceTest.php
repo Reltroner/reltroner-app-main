@@ -9,18 +9,7 @@ use App\Services\SSO\KeycloakIdentityService;
 
 class KeycloakIdentityServiceTest extends TestCase
 {
-protected string $privateKey = <<<KEY
------BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEAzqXWiwxupCSvJzpuG1HsRvN7kYM/qfNwCuWHa3gwxObn2ymlgmEYBLETymFcpnSUsctNk6heAQ7EzxKQEiC5EvhczHxVn9Yx8RJWb1x1o1t4bm/FG6HC8K3opgDdGztqKqRR3YKHyCuXapnwXCfJOLLmObAun1vDLteA94ppIqh+apMI2vlA38nSxrdbidKdvUSsfxbVsgcuyo6edSxnl2xe50Tzw9uQWGWpZJYG1ChcxrFAxo0xO+ogzAm8h1Hn0pVITNrW2N7A2Qe6hw2yYB9H9n1tFoZT3zh0+BTtPlqvGjufH6G+jD/adJzi10BGSAdoo6gWQBaLxGc1dQc5sKXc5teLoI0lp4rWuIwoMvVJE9idh+NROm4tW7x1YgnPZXoqhwIDAQABAoIBAQCxZQzQ0jrISFRCGDpa2BkLomqKgkl0vvArkHWQBaLxGc1dQc5sKXc5teLoI0lp4rWuIwoMvVJE9idh+NROm4tW7x1YgnPZXoqhwIDAQAB
------END RSA PRIVATE KEY-----
-KEY;
 
-protected string $publicKey = <<<KEY
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzqXWiwxupCSvJzpuG1HsRvN7kYM/qfNwCuWHa3gwxObn2ymlgmEYBLETymFcpnSUsctNk6heAQ7EzxKQEiC5EvhczHxVn9Yx8RJWb1x1o1t4bm/FG6HC8K3opgDdGztqKqRR3YKHyCuXapnwXCfJOLLmObAun1vDLteA94ppIqh+apMI2vlA38nSxrdbidKdvUSsfxbVsgcuyo6edSxnl2xe50Tzw9uQWGWpZJYG1ChcxrFAxo0xO+ogzAm8h1Hn0pVITNrW2N7A2Qe6hw2yYB9H9n1tFoZT3zh0+BTtPlqvGjufH6G+jD/adJzi10BGSAdoo6gWQBaLxGc1dQc5sKXc5teLoIwIDAQAB
------END PUBLIC KEY-----
-KEY;
-    
     protected function buildJwks(): array
     {
         return [
@@ -39,11 +28,13 @@ KEY;
 
     protected function issueToken(array $claims): string
     {
-        $privateKeyResource = openssl_pkey_get_private($this->privateKey);
+        $privateKey = file_get_contents(
+            base_path('tests/Fixtures/private.pem')
+        );
 
         return JWT::encode(
             $claims,
-            $privateKeyResource,
+            $privateKey,
             'RS256'
         );
     }
@@ -54,7 +45,10 @@ KEY;
             '*' => Http::response($this->buildJwks())
         ]);
 
-        config()->set('services.keycloak.test_public_key', $this->publicKey);
+        config()->set(
+            'services.keycloak.test_public_key',
+            file_get_contents(base_path('tests/Fixtures/public.pem'))
+        );
 
         $service = new KeycloakIdentityService();
 

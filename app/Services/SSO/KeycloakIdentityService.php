@@ -43,7 +43,7 @@ class KeycloakIdentityService
         if (!empty($publicKey)) {
             $decoded = JWT::decode(
                 $idToken,
-                new Key($publicKey, 'HS256') // jika test pakai HS256
+                new Key($publicKey, 'RS256') // jika test pakai RS256
             );
 
             return (array) $decoded;
@@ -57,5 +57,31 @@ class KeycloakIdentityService
         );
 
         return (array) $decoded;
+    }
+
+    public function exchangeCode(string $code): array
+    {
+        $response = Http::asForm()->post(
+            "{$this->baseUrl}/realms/{$this->realm}/protocol/openid-connect/token",
+            [
+                'grant_type'    => 'authorization_code',
+                'client_id'     => $this->clientId,
+                'client_secret' => config('services.keycloak.client_secret'),
+                'redirect_uri'  => config('services.keycloak.redirect_uri'),
+                'code'          => $code,
+            ]
+        );
+
+        if (!$response->successful()) {
+            throw new \Exception('Token exchange failed.');
+        }
+
+        $data = $response->json();
+
+        if (!isset($data['id_token'])) {
+            throw new \Exception('ID token not returned.');
+        }
+
+        return $data;
     }
 }

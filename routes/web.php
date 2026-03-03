@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\{
     DashboardController,
-    ProfileController,
     SSOController
 };
 
@@ -18,18 +17,12 @@ use App\Http\Middleware\EnsureSSOAuthenticated;
 | Load FIRST so we can override logout route later.
 |--------------------------------------------------------------------------
 */
-require __DIR__ . '/auth.php';
-
 
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
 */
-
-// Breeze login → always redirect to SSO
-Route::get('/login', fn () => redirect()->route('sso.login'))
-    ->name('login');
 
 // Root → dashboard if authenticated, otherwise SSO login
 Route::get('/', function () {
@@ -79,21 +72,7 @@ Route::middleware([EnsureSSOAuthenticated::class])
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
 
-        Route::get('/profile', [ProfileController::class, 'edit'])
-            ->name('profile.edit');
-
-        Route::patch('/profile', [ProfileController::class, 'update'])
-            ->name('profile.update');
-
-        Route::delete('/profile', [ProfileController::class, 'destroy'])
-            ->name('profile.destroy');
-
         Route::get('/modules/finance', FinanceRedirectController::class)
             ->name('modules.finance');
 
-        // Dev only
-        Route::get('/__session-test', function () {
-            session(['test' => 'ok']);
-            return session('test');
-        });
     });

@@ -1,6 +1,5 @@
 <?php
 // app/Http/Controllers/SSOController.php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -18,10 +17,10 @@ class SSOController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $state = session('sso_state');
-
-        if (!$state) {
+        // Always generate fresh state if not present
+        if (!session()->has('sso_state')) {
             $state = bin2hex(random_bytes(32));
+
             session(['sso_state' => $state]);
 
             Log::info('SSO redirect issued', [
@@ -35,14 +34,14 @@ class SSOController extends Controller
             'response_type' => 'code',
             'scope'         => 'openid',
             'redirect_uri'  => config('services.keycloak.redirect_uri'),
-            'state'         => $state,
+            'state'         => session('sso_state'),
         ]);
 
-        return redirect()->away(
-            rtrim(config('services.keycloak.base_url'), '/')
+        $authorizationUrl = rtrim(config('services.keycloak.base_url'), '/')
             . '/realms/' . config('services.keycloak.realm')
-            . '/protocol/openid-connect/auth?' . $query
-        );
+            . '/protocol/openid-connect/auth?' . $query;
+
+        return redirect()->away($authorizationUrl);
     }
 
     /**
@@ -60,22 +59,24 @@ class SSOController extends Controller
 
         try {
 
-            $tokens = $identity->exchangeCode(
-                $request->code,
-                config('services.keycloak.redirect_uri')
-            );
+            // Exchange authorization code → tokens
+            $tokens = $identity->exchangeCode($request->code);
 
-            abort_if(!isset($tokens['id_token']), 403, 'ID token not returned.');
+            if (!isset($tokens['id_token'])) {
+                throw new \Exception('ID token not returned.');
+            }
 
+            // Validate ID token
             $claims = $identity->verifyIdToken($tokens['id_token']);
 
+            // Regenerate session to prevent fixation
             $request->session()->regenerate();
 
             session([
                 'sso_authenticated' => true,
-                'access_token'      => $tokens['access_token'],
+                'access_token'      => $tokens['access_token'] ?? null,
                 'refresh_token'     => $tokens['refresh_token'] ?? null,
-                'id_token'          => $tokens['id_token'], // ✅ FIXED
+                'id_token'          => $tokens['id_token'],
                 'expires_at'        => now()
                     ->addSeconds($tokens['expires_in'] ?? 300)
                     ->timestamp,
@@ -83,6 +84,7 @@ class SSOController extends Controller
                 'gateway_auth_at'   => now()->timestamp,
             ]);
 
+            // Remove state after successful use
             session()->forget('sso_state');
 
             Log::info('SSO session established', [
@@ -107,13 +109,11 @@ class SSOController extends Controller
      */
     public function logout(Request $request)
     {
-        Log::info('LOGOUT CONTROLLER EXECUTED');
-
         $idToken = session('id_token');
 
-        // Always build redirect target FIRST (before invalidating session)
         $postLogoutRedirect = route('logged.out');
 
+        // If no id_token, just destroy local session
         if (!$idToken) {
             $request->session()->invalidate();
             $request->session()->regenerateToken();

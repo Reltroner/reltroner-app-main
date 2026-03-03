@@ -127,12 +127,12 @@
                             </a>
                         </li>
 
-                        <li class="sidebar-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                        {{-- <li class="sidebar-item {{ request()->routeIs('profile.*') ? 'active' : '' }}">
                             <a href="{{ route('profile.edit') }}" class="sidebar-link">
                                 <i class="bi bi-person-circle"></i>
                                 <span>Profile</span>
                             </a>
-                        </li>
+                        </li> --}}
 
                         <li class="sidebar-item">
                             <form method="POST" action="{{ route('logout') }}" class="w-100">

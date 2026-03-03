@@ -1,5 +1,5 @@
 <?php
-
+// config/auth.php
 return [
 
     /*

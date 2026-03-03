@@ -8,254 +8,353 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Role-Auth%20Gateway-blue">
-  <img src="https://img.shields.io/badge/Protocol-JWT-success">
-  <img src="https://img.shields.io/badge/SSO-Keycloak-orange">
+  <img src="https://img.shields.io/badge/Role-SSO%20Gateway-blue">
+  <img src="https://img.shields.io/badge/Authority-Keycloak-orange">
+  <img src="https://img.shields.io/badge/Protocol-OIDC%20%2B%20JWT-success">
   <img src="https://img.shields.io/badge/PHP-8.2+-8892BF">
   <img src="https://img.shields.io/badge/Laravel-12.x-red">
+  <img src="https://img.shields.io/badge/Auth-Layer%20Frozen-black">
 </p>
 
 ---
 
-## 📌 Overview
+# 🔐 Reltroner Gateway
 
-**Reltroner Gateway** is the **central authentication, authorization, and trust authority** for the Reltroner ecosystem.
+Reltroner Gateway is the **single authentication entry point** for the Reltroner ecosystem.
 
-This service is responsible for:
+It implements a strict **Gateway Pattern**:
 
-- User authentication (SSO)
-- Token issuance (JWT)
-- Cross-module trust verification
-- Acting as the **single source of identity truth**
+- Laravel is **NOT** the identity authority
+- Keycloak is the **single source of identity truth**
+- The gateway only:
+  - Redirects to Keycloak
+  - Exchanges authorization codes
+  - Verifies ID tokens
+  - Establishes a controlled session boundary
+  - Issues trust tokens for internal modules
 
-It is intentionally **stateless, deterministic, and security-first**.
-
----
-
-## 🎯 Core Responsibilities
-
-- 🔐 Authenticate users via **Keycloak**
-- 🪪 Issue signed JWT tokens
-- 🔁 Validate session trust for downstream modules
-- 🌐 Serve as SSO entry point for all Reltroner applications
-
-Downstream services (Finance, HRM, ERP, etc.) **never authenticate users directly**.
+This layer is **intentionally minimal, deterministic, and frozen**.
 
 ---
 
-## 🧠 Architectural Principles
-
-### 1️⃣ Single Source of Identity
-- All authentication flows pass through this gateway
-- No duplicated login logic in downstream services
-
-### 2️⃣ Trust, Not State
-- Gateway issues **signed tokens**
-- Modules verify tokens using shared trust keys
-- No session replication across services
-
-### 3️⃣ Security Over Convenience
-- Explicit token validation
-- Clear issuer & audience checks
-- No silent fallback or auto-login
-
-### 4️⃣ Determinism Over Complexity
-- Unit tests must be deterministic
-- Crypto correctness belongs to cryptographic libraries
-- Gateway tests validate behavior, not OpenSSL internals
-
----
-
-## 🔐 Authentication Flow (High Level)
+# 📌 Architectural Role
 
 ```text
 User
- └─▶ Reltroner Gateway
-      ├─▶ Keycloak (Auth)
-      ├─▶ Issue JWT
-      └─▶ Redirect to Target App
-               └─▶ Token Verified (Trust Only)
+ └─▶ Reltroner Gateway (Laravel)
+      ├─▶ Keycloak (Authentication Authority)
+      ├─▶ ID Token Verification (RS256)
+      ├─▶ Session Establishment
+      └─▶ Redirect to Target Module
+               └─▶ Module verifies Gateway trust
 ````
 
 ---
 
-## ⚙️ Installation & Setup
+# 🎯 Core Responsibilities
 
-### 1️⃣ Install Dependencies
+The Gateway is responsible for:
 
-```bash
-composer install
-npm install
-```
+* 🔐 Redirecting users to Keycloak
+* 🔁 Handling OIDC authorization code callbacks
+* 🪪 Verifying ID tokens (RS256 via JWKS)
+* 🧱 Establishing session trust boundary
+* 🪪 Issuing short-lived module tokens (HS256 internal trust)
 
----
+It is **NOT** responsible for:
 
-### 2️⃣ Environment Configuration
-
-Copy `.env.example` to `.env` and configure:
-
-```env
-KEYCLOAK_BASE_URL=
-KEYCLOAK_REALM=
-KEYCLOAK_CLIENT_ID=
-KEYCLOAK_CLIENT_SECRET=
-KEYCLOAK_REDIRECT_URI=
-KEYCLOAK_LOGOUT_URL=
-```
-
-Recommended gateway variables:
-
-```env
-APP_URL=http://app.reltroner.test
-JWT_TTL=3600
-JWT_ISSUER=reltroner-gateway
-```
+* User registration
+* Password management
+* Profile editing
+* Business logic
+* Role modeling
+* Database-driven authentication
 
 ---
 
-## 🧪 Testing
+# 🧠 Architectural Principles
 
-Run full test suite:
+## 1️⃣ Single Source of Identity
+
+Keycloak is the only identity authority.
+
+Laravel does not:
+
+* Store passwords
+* Authenticate locally
+* Mutate identity
+
+---
+
+## 2️⃣ Explicit Trust Boundary
+
+Gateway establishes:
+
+```php
+session([
+    'sso_authenticated' => true,
+    'access_token'      => '...',
+    'id_token'          => '...',
+    'identity'          => [...],
+]);
+```
+
+No user model mutation.
+No implicit guards.
+
+---
+
+## 3️⃣ Deterministic Authentication
+
+Authentication flow must be:
+
+* Auditable
+* Predictable
+* Stateless across services
+* Explicit in failure
+
+No silent fallback.
+No hidden behavior.
+
+---
+
+## 4️⃣ Frozen Authentication Layer
+
+Phases 2–4 are permanently frozen.
+
+Allowed changes only if:
+
+* Critical security vulnerability
+* OIDC protocol break
+* Cryptographic CVE
+
+Otherwise:
+
+> Authentication layer must not evolve.
+
+---
+
+# 🔐 Authentication Flow (Detailed)
+
+### 1️⃣ Entry
+
+```
+GET /
+```
+
+Redirects to `/sso/login` if not authenticated.
+
+---
+
+### 2️⃣ SSO Redirect
+
+```
+/sso/login
+```
+
+Redirects to:
+
+```
+/realms/{realm}/protocol/openid-connect/auth
+```
+
+With:
+
+* client_id
+* redirect_uri
+* state
+* scope=openid
+
+---
+
+### 3️⃣ Callback
+
+```
+/sso/callback?code=XXX&state=YYY
+```
+
+Gateway performs:
+
+* State validation
+* Authorization code exchange
+* ID token verification (RS256)
+* Session regeneration
+* Session creation
+* State invalidation
+
+---
+
+### 4️⃣ Logout (OIDC Compliant)
+
+```
+POST /logout
+```
+
+Flow:
+
+* Redirect to Keycloak logout endpoint
+* Include id_token_hint
+* Return to `/logged-out`
+* Local session invalidated
+
+Fully OIDC RP-Initiated Logout compliant.
+
+---
+
+# 🧪 Testing
+
+Run:
 
 ```bash
 php artisan test
 ```
 
-Tests cover:
+Tests validate:
 
-* SSO redirect flow
-* Callback validation
+* SSO redirect logic
 * State mismatch protection
-* JWT leeway tolerance
-* Module trust validation
-* Audience validation
-* Gateway-only responsibilities
+* Callback failure handling
+* JWT leeway enforcement
+* Module token issuance
+* Audience & issuer validation
+* Middleware boundary enforcement
+
+Authentication behavior is covered.
 
 ---
 
-## ⚠️ Known Issue — Windows OpenSSL RSA (Test Environment)
+# ⚠️ Windows OpenSSL Note (Development Only)
 
-On some Windows PHP builds (e.g., Laragon), RSA signing or verification may throw:
+Some Windows PHP builds require explicit OpenSSL provider activation.
 
-```
-DomainException: OpenSSL unable to validate key
-```
+Minimal config example:
 
-This is caused by:
+```ini
+openssl_conf = openssl_init
 
-* Windows OpenSSL binding strictness
-* PEM formatting sensitivity
-* Environment-level crypto parsing
+[openssl_init]
+providers = provider_sect
 
-### Important:
+[provider_sect]
+default = default_sect
 
-This does **NOT** affect production logic.
-
-Gateway production path uses:
-
-```
-JWKS → RS256 verification
+[default_sect]
+activate = 1
 ```
 
-Unit tests may use deterministic test-mode keys to avoid OS-specific OpenSSL behavior.
+Environment variable:
 
-This is an **environment constraint**, not a gateway security flaw.
+```
+OPENSSL_CONF=path/to/openssl_local.cnf
+```
+
+Production behavior is unaffected.
 
 ---
 
-## 🔗 Integration with Other Modules
+# 🗂 Current Route Surface
 
-Downstream modules configure:
+Minimal and intentional:
 
-```env
-RELTRONER_GATEWAY_ISSUER=http://app.reltroner.test
-RELTRONER_GATEWAY_AUDIENCE=finance.reltroner.test
-RELTRONER_MODULE_SIGNING_KEY=shared-secret
+```
+/
+dashboard
+modules/finance
+sso/login
+sso/callback
+logout
+logged-out
 ```
 
-Gateway:
+No:
 
-* Does not depend on module state
-* Does not call module APIs
-* Only issues identity trust tokens
-
-Modules must trust the gateway — not vice versa.
-
----
-
-## 🗂️ Typical Consumers
-
-* Finance Module
-* HRM Module
-* ERP Dashboard
-* Admin Console
-* Future Reltroner services
+* login
+* register
+* profile
+* password reset
+* local auth routes
 
 ---
 
-## ⚠️ Design Constraints
+# 🔗 Downstream Module Integration
 
-This repository must remain minimal and security-focused.
+Modules must:
 
-### ❌ Never Add
+* Trust Gateway issuer
+* Verify HS256 internal tokens
+* Enforce TTL (default: 60s)
+* Never authenticate users directly
 
+Gateway never calls modules.
+Modules trust gateway — not vice versa.
+
+---
+
+# 🚫 Design Constraints (Non-Negotiable)
+
+Do NOT add:
+
+* Local authentication
+* User profile editing
+* Role logic
 * Business logic
-* Accounting logic
-* Cross-module mutation
-* Session storage replication
-* Feature creep
+* Session replication across domains
+* Feature creep into identity layer
 
-### ✅ Only Responsible For
+This repository must remain:
 
-* Authentication
-* Token issuance
-* Trust validation
-* Identity boundary enforcement
+> Authentication-only.
 
 ---
 
-## 🚀 Roadmap
+# 📊 Freeze Status
 
-| Phase | Scope                      | Status  |
-| ----- | -------------------------- | ------- |
-| 1     | SSO via Keycloak           | ✅ done  |
-| 2     | JWT Trust Model            | ✅ done  |
-| 3     | Multi-module Audience      | ✅ done  |
-| 4     | Token Hardening & Rotation | planned |
-| 5     | Key Rotation Automation    | planned |
+| Phase | Scope          | Status    |
+| ----- | -------------- | --------- |
+| 2     | Auth Gateway   | 🧊 Frozen |
+| 3     | Trust Boundary | 🧊 Frozen |
+| 4     | UI Contract    | 🧊 Frozen |
+
+Authentication is considered **solved**.
 
 ---
 
-## 🧩 Engineering Philosophy
+# 🧩 Engineering Philosophy
 
 Identity systems must be:
 
-* Predictable
-* Auditable
 * Boring
 * Deterministic
+* Minimal
+* Auditable
+* Immutable once stable
 
 Complexity belongs in business modules — not in the trust boundary.
 
 ---
 
-## 🤝 Contribution Rules
+# 🤝 Contribution Rules
 
-* Do not weaken token validation
-* Do not add implicit trust
-* Security review required for crypto changes
-* No OpenSSL experimentation in production path
+Any change affecting:
 
----
+* JWT signing
+* Token validation
+* Session semantics
+* Issuer / audience logic
+* Logout flow
 
-## 📄 License
-
-Built on top of **Laravel Framework (MIT License)**.
-
-Reltroner Gateway follows the same license unless stated otherwise.
+Requires architectural review.
 
 ---
 
-> **“Identity must be boring, predictable, and unquestionable.”**
+# 📄 License
+
+Built on top of Laravel (MIT).
+
+Reltroner Gateway follows the same license unless specified otherwise.
+
+---
+
+> “Identity must be boring, predictable, and unquestionable.”
 > — Reltroner Gateway Principle
 
